@@ -65,6 +65,11 @@ VITE_SUPABASE_ANON_KEY=<anon public key>
 
 5. `npm run dev` 를 다시 시작합니다. (Vite 는 `.env` 변경 시 재시작이 필요합니다)
 
+> 이 저장소에는 이미 라이브 프로젝트(`aafsrqffholhzdhylnui`)의 값이 `.env.production` 에 들어 있습니다.
+> `npm run build` 는 별도 설정 없이 그 프로젝트에 연결됩니다.
+> 로컬 개발에서도 같은 프로젝트를 쓰려면 `cp .env.production .env.local` 후 `npm run dev` 하세요.
+> (`.env` 가 없으면 데모 모드로 실행됩니다.)
+
 > 이메일 인증을 끄고 싶다면 Supabase → **Authentication → Providers → Email → Confirm email** 을 비활성화하세요.
 > 인증이 켜져 있으면 가입 후 메일 확인 링크를 눌러야 로그인할 수 있습니다.
 
@@ -149,11 +154,31 @@ projects/school-pick/
 
 ---
 
-## 6. 배포
+## 6. 배포 (GitHub Pages)
 
-- **Vercel / Netlify**: 저장소를 연결하고 Root Directory 를 `projects/school-pick` 로 지정, Build Command `npm run build`, Output `dist`.
-- 환경변수 `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` 를 배포 환경에도 등록하세요.
-- 해시 라우팅(`#/shorts`, `#/community/qna`, `#/post/{id}`)을 사용하므로 별도 rewrite 설정이 필요 없습니다.
+- 저장소: <https://github.com/chan992255-lab/school-pick>
+- 배포 주소(설정 후): <https://chan992255-lab.github.io/school-pick/>
+- Vite `base` 가 `/school-pick/` 로 설정되어 있고, 라우팅은 해시(`#/shorts`, `#/community/qna`, `#/post/{id}`)라서 새로고침해도 404 가 나지 않습니다.
+- 빌드 시 `.env.production` 이 자동으로 적용되어 라이브 Supabase 프로젝트에 연결됩니다.
+
+### 배포 워크플로 추가하기 (한 번만)
+
+이 저장소는 Pages 소스가 **GitHub Actions** 로 설정되어 있습니다. 배포는 아래 파일이 있어야 동작합니다.
+
+```
+.github/workflows/deploy.yml
+```
+
+같은 내용이 [`deploy/deploy.yml`](./deploy/deploy.yml) 에도 들어 있습니다.
+GitHub 웹에서 **Add file → Create new file** 로 경로를 `.github/workflows/deploy.yml` 로 입력하고 내용을 붙여넣은 뒤 커밋하면, `main` 푸시마다 자동 빌드·배포됩니다.
+
+> 이 파일은 GitHub App 토큰에 `workflows` 권한이 없어 자동 푸시되지 않았습니다.
+> (App 설치 설정에서 Workflows 권한을 켜면 이후에는 자동으로 올릴 수 있습니다.)
+
+### 다른 호스팅
+
+- **Vercel / Netlify**: Root Directory `projects/school-pick`, Build Command `npm run build`, Output `dist`. 이 경우 `vite.config.ts` 의 `base` 를 `/` 로 바꾸세요.
+- 해시 라우팅이라 별도 rewrite 설정은 필요 없습니다.
 
 ---
 

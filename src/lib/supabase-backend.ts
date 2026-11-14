@@ -53,7 +53,7 @@ function friendlyAuthError(message: string): string {
 
 function friendlyDbError(message: string): string {
   if (/duplicate key/i.test(message) && /nickname/i.test(message)) return '이미 사용 중인 닉네임이에요.';
-  if (/relation .* does not exist/i.test(message))
+  if (/Could not find the table|schema cache|relation .* does not exist/i.test(message))
     return 'Supabase 테이블이 아직 없습니다. supabase/schema.sql을 SQL Editor에서 실행해 주세요.';
   if (/bucket/i.test(message) && /not found/i.test(message))
     return "Storage에 'media' 버킷이 없습니다. supabase/schema.sql을 실행해 주세요.";
