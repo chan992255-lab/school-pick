@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import {
   Bookmark,
   LogIn,
+  Map as MapIcon,
   MessagesSquare,
   Moon,
   Plus,
@@ -16,6 +17,7 @@ import { AuthModal } from './components/AuthModal';
 import { UploadModal } from './components/UploadModal';
 import { PostDetailModal } from './components/PostDetailModal';
 import { CommunityPage } from './pages/CommunityPage';
+import { MapPage } from './pages/MapPage';
 import { MealPage } from './pages/MealPage';
 import { SavedPage } from './pages/SavedPage';
 import { ProfilePage } from './pages/ProfilePage';
@@ -26,6 +28,7 @@ import { schoolLine } from './lib/format';
 import type { Board } from './lib/types';
 
 type Route =
+  | { name: 'map' }
   | { name: 'community'; board: Board | 'all' }
   | { name: 'meal' }
   | { name: 'saved' }
@@ -39,6 +42,7 @@ function parseHash(): { route: Route; postId: string | null } {
   if (parts[0] === 'post' && parts[1]) {
     return { route: { name: 'community', board: 'all' }, postId: parts[1] };
   }
+  if (parts[0] === 'map') return { route: { name: 'map' }, postId: null };
   if (parts[0] === 'community') {
     const board = parts[1] && BOARDS_SET.has(parts[1]) ? (parts[1] as Board) : 'all';
     return { route: { name: 'community', board }, postId: null };
@@ -46,12 +50,15 @@ function parseHash(): { route: Route; postId: string | null } {
   if (parts[0] === 'meal') return { route: { name: 'meal' }, postId: null };
   if (parts[0] === 'saved') return { route: { name: 'saved' }, postId: null };
   if (parts[0] === 'profile') return { route: { name: 'profile' }, postId: null };
-  // 예전 쇼츠(#/shorts) 링크와 홈 화면 바로가기는 커뮤니티로 보낸다.
-  return { route: { name: 'community', board: 'all' }, postId: null };
+  // 첫 화면(빈 해시)은 전국 고등학교 지도다. 예전 쇼츠(#/shorts) 링크는 커뮤니티로 보낸다.
+  if (parts[0] === 'shorts') return { route: { name: 'community', board: 'all' }, postId: null };
+  return { route: { name: 'map' }, postId: null };
 }
 
 function hashFor(route: Route): string {
   switch (route.name) {
+    case 'map':
+      return '#/map';
     case 'community':
       return route.board === 'all' ? '#/community' : `#/community/${route.board}`;
     case 'meal':
@@ -61,7 +68,7 @@ function hashFor(route: Route): string {
     case 'profile':
       return '#/profile';
     default:
-      return '#/community';
+      return '#/map';
   }
 }
 
@@ -154,7 +161,7 @@ function Shell() {
     const hash = window.location.hash;
     if (!hash.includes('access_token=') && !hash.includes('error_description=')) return;
     const timer = window.setTimeout(() => {
-      window.location.hash = '#/community';
+      window.location.hash = '#/map';
     }, 700);
     return () => window.clearTimeout(timer);
   }, []);
@@ -167,6 +174,13 @@ function Shell() {
   }, [closePost, route]);
 
   const navItems = [
+    {
+      key: 'map',
+      label: '지도',
+      icon: <MapIcon className="h-[21px] w-[21px]" strokeWidth={2.1} />,
+      active: route.name === 'map',
+      onClick: () => navigate({ name: 'map' }),
+    },
     {
       key: 'community',
       label: '커뮤니티',
@@ -201,15 +215,17 @@ function Shell() {
     <div className="flex h-[100dvh] overflow-hidden bg-zinc-50 dark:bg-zinc-950">
       {/* 데스크톱 사이드바 */}
       <aside className="hidden w-64 shrink-0 flex-col border-r border-zinc-200 bg-white px-4 py-6 lg:flex dark:border-white/10 dark:bg-zinc-950">
-        <button
-          type="button"
-          onClick={() => navigate({ name: 'community', board: 'all' })}
-          className="px-1.5 text-left"
-        >
+        <button type="button" onClick={() => navigate({ name: 'map' })} className="px-1.5 text-left">
           <Logo />
         </button>
 
         <nav className="mt-7 space-y-1">
+          <SidebarLink
+            active={route.name === 'map'}
+            icon={<MapIcon className="h-[18px] w-[18px]" />}
+            label="고등학교 지도"
+            onClick={() => navigate({ name: 'map' })}
+          />
           <SidebarLink
             active={route.name === 'community'}
             icon={<MessagesSquare className="h-[18px] w-[18px]" />}
@@ -283,7 +299,7 @@ function Shell() {
       <div className="flex min-w-0 flex-1 flex-col">
         {/* 모바일 헤더 */}
         <header className="flex h-14 shrink-0 items-center justify-between border-b border-zinc-200 bg-white/90 px-4 backdrop-blur lg:hidden dark:border-white/10 dark:bg-zinc-950/90">
-          <button type="button" onClick={() => navigate({ name: 'community', board: 'all' })}>
+          <button type="button" onClick={() => navigate({ name: 'map' })}>
             <Logo />
           </button>
           <div className="flex items-center gap-1">
@@ -314,7 +330,11 @@ function Shell() {
 
         <SetupBanner />
 
-        <main ref={mainRef} className="min-h-0 flex-1 overflow-y-auto">
+        <main
+          ref={mainRef}
+          className={`min-h-0 flex-1 ${route.name === 'map' ? 'overflow-hidden' : 'overflow-y-auto'}`}
+        >
+          {route.name === 'map' && <MapPage onOpenMeal={() => navigate({ name: 'meal' })} />}
           {route.name === 'community' && (
             <CommunityPage
               board={route.board}
@@ -327,29 +347,10 @@ function Shell() {
           {route.name === 'profile' && <ProfilePage />}
         </main>
 
-        {/* 모바일 하단 탭 */}
-        <nav className="shrink-0 border-t border-zinc-200 bg-white/95 px-2 pb-[max(0.25rem,env(safe-area-inset-bottom))] pt-1.5 backdrop-blur lg:hidden dark:border-white/10 dark:bg-zinc-950/95">
+        {/* 모바일 하단 탭: 지도 · 커뮤니티 · 급식표 · 저장 · 프로필 (글쓰기는 떠 있는 버튼) */}
+        <nav className="relative shrink-0 border-t border-zinc-200 bg-white/95 px-1 pb-[max(0.25rem,env(safe-area-inset-bottom))] pt-1.5 backdrop-blur lg:hidden dark:border-white/10 dark:bg-zinc-950/95">
           <div className="flex items-center">
-            {navItems.slice(0, 2).map((item) => (
-              <NavItem
-                key={item.key}
-                active={item.active}
-                icon={item.icon}
-                label={item.label}
-                onClick={item.onClick}
-              />
-            ))}
-            <div className="flex flex-1 justify-center">
-              <button
-                type="button"
-                onClick={() => openUpload()}
-                aria-label="새 글 쓰기"
-                className="-mt-5 grid h-12 w-12 place-items-center rounded-2xl bg-gradient-to-br from-brand-500 to-brand-700 text-white shadow-float transition active:scale-95"
-              >
-                <Plus className="h-6 w-6" strokeWidth={2.4} />
-              </button>
-            </div>
-            {navItems.slice(2).map((item) => (
+            {navItems.map((item) => (
               <NavItem
                 key={item.key}
                 active={item.active}
@@ -359,6 +360,14 @@ function Shell() {
               />
             ))}
           </div>
+          <button
+            type="button"
+            onClick={() => openUpload()}
+            aria-label="새 글 쓰기"
+            className="absolute -top-16 right-3 grid h-12 w-12 place-items-center rounded-2xl bg-gradient-to-br from-brand-500 to-brand-700 text-white shadow-float transition active:scale-95"
+          >
+            <Plus className="h-6 w-6" strokeWidth={2.4} />
+          </button>
         </nav>
       </div>
 
