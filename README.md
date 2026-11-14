@@ -157,23 +157,35 @@ projects/school-pick/
 ## 6. 배포 (GitHub Pages)
 
 - 저장소: <https://github.com/chan992255-lab/school-pick>
-- 배포 주소(설정 후): <https://chan992255-lab.github.io/school-pick/>
+- 라이브 주소: <https://chan992255-lab.github.io/school-pick/>
 - Vite `base` 가 `/school-pick/` 로 설정되어 있고, 라우팅은 해시(`#/shorts`, `#/community/qna`, `#/post/{id}`)라서 새로고침해도 404 가 나지 않습니다.
 - 빌드 시 `.env.production` 이 자동으로 적용되어 라이브 Supabase 프로젝트에 연결됩니다.
 
-### 배포 워크플로 추가하기 (한 번만)
+### 현재 배포 방식
 
-이 저장소는 Pages 소스가 **GitHub Actions** 로 설정되어 있습니다. 배포는 아래 파일이 있어야 동작합니다.
+Pages 소스는 **`gh-pages` 브랜치**로 설정되어 있습니다(`main` 이 아닙니다).
+사이트를 갱신하려면 빌드 결과를 그 브랜치에 올리면 됩니다.
 
+```bash
+npm run build
+
+# 저장소 밖 임시 작업 공간에 gh-pages 를 꺼내 빌드 결과만 반영
+git fetch origin gh-pages:gh-pages -f
+git worktree add ../deploy-ghp gh-pages
+find ../deploy-ghp -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
+cp -r dist/. ../deploy-ghp/
+touch ../deploy-ghp/.nojekyll          # Jekyll 처리 건너뛰기
+cd ../deploy-ghp && git add -A && git commit -m "deploy: 스쿨픽 빌드" && git push origin HEAD:gh-pages
 ```
-.github/workflows/deploy.yml
-```
 
-같은 내용이 [`deploy/deploy.yml`](./deploy/deploy.yml) 에도 들어 있습니다.
-GitHub 웹에서 **Add file → Create new file** 로 경로를 `.github/workflows/deploy.yml` 로 입력하고 내용을 붙여넣은 뒤 커밋하면, `main` 푸시마다 자동 빌드·배포됩니다.
+### 대안: GitHub Actions 로 자동 배포
 
-> 이 파일은 GitHub App 토큰에 `workflows` 권한이 없어 자동 푸시되지 않았습니다.
-> (App 설치 설정에서 Workflows 권한을 켜면 이후에는 자동으로 올릴 수 있습니다.)
+[`deploy/deploy.yml`](./deploy/deploy.yml) 이 `main` 푸시 시 자동 빌드·배포하는 워크플로입니다.
+쓰려면 GitHub 웹에서 이 파일을 `.github/workflows/deploy.yml` 로 옮기고,
+저장소 **Settings → Pages → Source** 를 **GitHub Actions** 로 바꾸세요.
+
+> 이 파일은 자동 푸시되지 않았습니다. 작업에 쓰인 GitHub App 토큰에 `workflows` 권한이 없어
+> `.github/workflows/` 경로를 푸시하면 거부되기 때문입니다.
 
 ### 다른 호스팅
 
