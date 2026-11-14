@@ -29,10 +29,9 @@ import {
 } from '../lib/schools';
 import { fetchMeals, addDays, dateLabel, loadSavedSchool, saveSchool, searchSchools, todayYmd, type Meal, type School } from '../lib/neis';
 
-const LIGHT_TILES = 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
-const DARK_TILES = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
-const TILE_ATTRIBUTION =
-  '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> · &copy; <a href="https://carto.com/attributions">CARTO</a>';
+// 키 없이 쓸 수 있는 OpenStreetMap 기본 타일. 다크 모드는 아래 CSS 필터로 어둡게 보여 준다.
+const TILE_URL = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+const TILE_ATTRIBUTION = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> 기여자';
 
 interface Target {
   name: string;
@@ -127,17 +126,15 @@ export function MapPage({ onOpenMeal }: { onOpenMeal: () => void }) {
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
-    const tiles = L.tileLayer(theme === 'dark' ? DARK_TILES : LIGHT_TILES, {
+    const tiles = L.tileLayer(TILE_URL, {
       attribution: TILE_ATTRIBUTION,
-      subdomains: 'abcd',
       maxZoom: 19,
-      detectRetina: true,
     });
     tiles.addTo(map);
     return () => {
       tiles.remove();
     };
-  }, [theme]);
+  }, []);
 
   /* ---------------- 학교 핀 ---------------- */
 
