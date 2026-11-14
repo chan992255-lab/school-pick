@@ -1,0 +1,26 @@
+{
+  "name": "스쿨픽 - 고등학생 쇼츠·커뮤니티",
+  "short_name": "스쿨픽",
+  "description": "고등학생들의 짧은 영상·사진 공유와 일상·급식·질문 커뮤니티",
+  "lang": "ko",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#4f46e5",
+  "background_color": "#ffffff",
+  "icons": [
+    {
+      "src": "./icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
