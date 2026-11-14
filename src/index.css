@@ -1,0 +1,104 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --header-h: 56px;
+    --nav-h: 68px;
+  }
+
+  @media (min-width: 1024px) {
+    :root {
+      --header-h: 0px;
+      --nav-h: 0px;
+    }
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-zinc-50 font-sans text-zinc-900 antialiased dark:bg-zinc-950 dark:text-zinc-100;
+  }
+
+  ::selection {
+    @apply bg-brand-500/25;
+  }
+
+  /* 기본 스크롤바를 부드럽게 */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(120, 120, 140, 0.35) transparent;
+  }
+}
+
+@layer components {
+  .card {
+    @apply rounded-3xl border border-zinc-200/80 bg-white shadow-card dark:border-white/10 dark:bg-zinc-900;
+  }
+
+  .btn {
+    @apply inline-flex items-center justify-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .btn-primary {
+    @apply btn bg-brand-600 text-white shadow-float hover:bg-brand-700;
+  }
+
+  .btn-ghost {
+    @apply btn text-zinc-600 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-white/5;
+  }
+
+  .btn-soft {
+    @apply btn bg-brand-50 text-brand-700 hover:bg-brand-100 dark:bg-brand-500/15 dark:text-brand-200 dark:hover:bg-brand-500/25;
+  }
+
+  .chip {
+    @apply inline-flex shrink-0 items-center gap-1 rounded-full border border-zinc-200 bg-white px-3 py-1.5 text-[13px] font-semibold text-zinc-600 transition hover:border-zinc-300 hover:text-zinc-900 dark:border-white/10 dark:bg-white/5 dark:text-zinc-300 dark:hover:text-white;
+  }
+
+  .chip-active {
+    @apply border-brand-500 bg-brand-500 text-white hover:border-brand-500 hover:text-white dark:border-brand-500 dark:bg-brand-500 dark:text-white;
+  }
+
+  .field {
+    @apply w-full rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-[15px] text-zinc-900 outline-none transition placeholder:text-zinc-400 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 dark:border-white/10 dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder:text-zinc-500;
+  }
+
+  .label {
+    @apply mb-1.5 block text-[13px] font-semibold text-zinc-600 dark:text-zinc-400;
+  }
+
+  .section-title {
+    @apply text-xl font-extrabold tracking-tight text-zinc-900 dark:text-white;
+  }
+
+  .muted {
+    @apply text-[13px] text-zinc-500 dark:text-zinc-400;
+  }
+}
+
+@layer utilities {
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  .safe-top {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+
+  .text-balance {
+    text-wrap: balance;
+  }
+}
