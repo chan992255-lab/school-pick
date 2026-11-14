@@ -117,7 +117,7 @@ export function SetupBanner() {
             </ol>
             <p className="mt-3 flex items-start gap-1.5 text-[11.5px] font-semibold opacity-80">
               <Sparkles className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-              데모 모드에서도 회원가입·글쓰기·좋아요·댓글·북마크·사진/영상 업로드 흐름을 그대로
+              데모 모드에서도 회원가입·글쓰기·좋아요·댓글·북마크·사진 첨부 흐름을 그대로
               체험할 수 있어요.
             </p>
           </div>

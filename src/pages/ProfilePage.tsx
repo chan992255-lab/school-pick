@@ -15,7 +15,6 @@ import {
 } from 'lucide-react';
 import { Avatar } from '../components/Avatar';
 import { EmptyState } from '../components/EmptyState';
-import { MediaCard } from '../components/MediaCard';
 import { PostCard } from '../components/PostCard';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
@@ -67,8 +66,8 @@ export function ProfilePage() {
     ])
       .then(([mine, bookmarks]) => {
         if (!alive) return;
-        setMyPosts(mine);
-        setSaved(bookmarks);
+        setMyPosts(mine.filter((post) => post.kind === 'post'));
+        setSaved(bookmarks.filter((post) => post.kind === 'post'));
       })
       .catch((err: unknown) => {
         if (alive) toast(err instanceof Error ? err.message : '프로필 정보를 불러오지 못했어요.', 'error');
@@ -144,8 +143,6 @@ export function ProfilePage() {
   };
 
   const list = tab === 'posts' ? myPosts : saved;
-  const listMedia = list.filter((p) => p.kind === 'media');
-  const listArticles = list.filter((p) => p.kind === 'post');
 
   return (
     <div className="mx-auto w-full max-w-4xl px-4 py-4 lg:px-6 lg:py-8">
@@ -324,16 +321,7 @@ export function ProfilePage() {
             />
           ) : (
             <div className="space-y-4">
-              {listMedia.length > 0 && (
-                <div className="grid grid-cols-2 gap-3">
-                  {listMedia.map((post) => (
-                    <div key={post.id} className="aspect-[4/5]">
-                      <MediaCard post={post} />
-                    </div>
-                  ))}
-                </div>
-              )}
-              {listArticles.map((post) => (
+              {list.map((post) => (
                 <PostCard key={post.id} post={post} />
               ))}
             </div>

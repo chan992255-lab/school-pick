@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import {
   Bookmark,
-  Clapperboard,
   LogIn,
   MessagesSquare,
   Moon,
   Plus,
   Sun,
   User as UserIcon,
+  UtensilsCrossed,
 } from 'lucide-react';
 import { Logo } from './components/Logo';
 import { Avatar } from './components/Avatar';
@@ -15,8 +15,8 @@ import { SetupBanner } from './components/SetupBanner';
 import { AuthModal } from './components/AuthModal';
 import { UploadModal } from './components/UploadModal';
 import { PostDetailModal } from './components/PostDetailModal';
-import { FeedPage } from './pages/FeedPage';
 import { CommunityPage } from './pages/CommunityPage';
+import { MealPage } from './pages/MealPage';
 import { SavedPage } from './pages/SavedPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { useAuth } from './context/AuthContext';
@@ -26,8 +26,8 @@ import { schoolLine } from './lib/format';
 import type { Board } from './lib/types';
 
 type Route =
-  | { name: 'shorts' }
   | { name: 'community'; board: Board | 'all' }
+  | { name: 'meal' }
   | { name: 'saved' }
   | { name: 'profile' };
 
@@ -37,27 +37,31 @@ function parseHash(): { route: Route; postId: string | null } {
   const clean = window.location.hash.replace(/^#\/?/, '');
   const parts = clean.split('/').filter(Boolean);
   if (parts[0] === 'post' && parts[1]) {
-    return { route: { name: 'shorts' }, postId: parts[1] };
+    return { route: { name: 'community', board: 'all' }, postId: parts[1] };
   }
   if (parts[0] === 'community') {
     const board = parts[1] && BOARDS_SET.has(parts[1]) ? (parts[1] as Board) : 'all';
     return { route: { name: 'community', board }, postId: null };
   }
+  if (parts[0] === 'meal') return { route: { name: 'meal' }, postId: null };
   if (parts[0] === 'saved') return { route: { name: 'saved' }, postId: null };
   if (parts[0] === 'profile') return { route: { name: 'profile' }, postId: null };
-  return { route: { name: 'shorts' }, postId: null };
+  // 예전 쇼츠(#/shorts) 링크와 홈 화면 바로가기는 커뮤니티로 보낸다.
+  return { route: { name: 'community', board: 'all' }, postId: null };
 }
 
 function hashFor(route: Route): string {
   switch (route.name) {
     case 'community':
       return route.board === 'all' ? '#/community' : `#/community/${route.board}`;
+    case 'meal':
+      return '#/meal';
     case 'saved':
       return '#/saved';
     case 'profile':
       return '#/profile';
     default:
-      return '#/shorts';
+      return '#/community';
   }
 }
 
@@ -150,7 +154,7 @@ function Shell() {
     const hash = window.location.hash;
     if (!hash.includes('access_token=') && !hash.includes('error_description=')) return;
     const timer = window.setTimeout(() => {
-      window.location.hash = '#/shorts';
+      window.location.hash = '#/community';
     }, 700);
     return () => window.clearTimeout(timer);
   }, []);
@@ -164,18 +168,18 @@ function Shell() {
 
   const navItems = [
     {
-      key: 'shorts',
-      label: '쇼츠',
-      icon: <Clapperboard className="h-[21px] w-[21px]" strokeWidth={2.1} />,
-      active: route.name === 'shorts',
-      onClick: () => navigate({ name: 'shorts' }),
-    },
-    {
       key: 'community',
       label: '커뮤니티',
       icon: <MessagesSquare className="h-[21px] w-[21px]" strokeWidth={2.1} />,
       active: route.name === 'community',
       onClick: () => navigate({ name: 'community', board: 'all' }),
+    },
+    {
+      key: 'meal',
+      label: '급식표',
+      icon: <UtensilsCrossed className="h-[21px] w-[21px]" strokeWidth={2.1} />,
+      active: route.name === 'meal',
+      onClick: () => navigate({ name: 'meal' }),
     },
     {
       key: 'saved',
@@ -197,22 +201,26 @@ function Shell() {
     <div className="flex h-[100dvh] overflow-hidden bg-zinc-50 dark:bg-zinc-950">
       {/* 데스크톱 사이드바 */}
       <aside className="hidden w-64 shrink-0 flex-col border-r border-zinc-200 bg-white px-4 py-6 lg:flex dark:border-white/10 dark:bg-zinc-950">
-        <button type="button" onClick={() => navigate({ name: 'shorts' })} className="px-1.5 text-left">
+        <button
+          type="button"
+          onClick={() => navigate({ name: 'community', board: 'all' })}
+          className="px-1.5 text-left"
+        >
           <Logo />
         </button>
 
         <nav className="mt-7 space-y-1">
           <SidebarLink
-            active={route.name === 'shorts'}
-            icon={<Clapperboard className="h-[18px] w-[18px]" />}
-            label="쇼츠"
-            onClick={() => navigate({ name: 'shorts' })}
-          />
-          <SidebarLink
             active={route.name === 'community'}
             icon={<MessagesSquare className="h-[18px] w-[18px]" />}
             label="커뮤니티"
             onClick={() => navigate({ name: 'community', board: 'all' })}
+          />
+          <SidebarLink
+            active={route.name === 'meal'}
+            icon={<UtensilsCrossed className="h-[18px] w-[18px]" />}
+            label="오늘 급식표"
+            onClick={() => navigate({ name: 'meal' })}
           />
           <SidebarLink
             active={route.name === 'saved'}
@@ -230,11 +238,11 @@ function Shell() {
 
         <button
           type="button"
-          onClick={() => openUpload('media')}
+          onClick={() => openUpload()}
           className="btn-primary mt-4 w-full py-2.5"
         >
           <Plus className="h-4 w-4" />
-          올리기
+          글쓰기
         </button>
 
         <div className="mt-auto space-y-2">
@@ -275,7 +283,7 @@ function Shell() {
       <div className="flex min-w-0 flex-1 flex-col">
         {/* 모바일 헤더 */}
         <header className="flex h-14 shrink-0 items-center justify-between border-b border-zinc-200 bg-white/90 px-4 backdrop-blur lg:hidden dark:border-white/10 dark:bg-zinc-950/90">
-          <button type="button" onClick={() => navigate({ name: 'shorts' })}>
+          <button type="button" onClick={() => navigate({ name: 'community', board: 'all' })}>
             <Logo />
           </button>
           <div className="flex items-center gap-1">
@@ -307,13 +315,14 @@ function Shell() {
         <SetupBanner />
 
         <main ref={mainRef} className="min-h-0 flex-1 overflow-y-auto">
-          {route.name === 'shorts' && <FeedPage />}
           {route.name === 'community' && (
             <CommunityPage
               board={route.board}
               onBoardChange={(board) => navigate({ name: 'community', board })}
+              onOpenMeal={() => navigate({ name: 'meal' })}
             />
           )}
+          {route.name === 'meal' && <MealPage />}
           {route.name === 'saved' && <SavedPage />}
           {route.name === 'profile' && <ProfilePage />}
         </main>
@@ -333,8 +342,8 @@ function Shell() {
             <div className="flex flex-1 justify-center">
               <button
                 type="button"
-                onClick={() => openUpload('media')}
-                aria-label="새 게시물 올리기"
+                onClick={() => openUpload()}
+                aria-label="새 글 쓰기"
                 className="-mt-5 grid h-12 w-12 place-items-center rounded-2xl bg-gradient-to-br from-brand-500 to-brand-700 text-white shadow-float transition active:scale-95"
               >
                 <Plus className="h-6 w-6" strokeWidth={2.4} />
@@ -387,8 +396,8 @@ function Modals() {
       {upload && (
         <UploadModal
           open
-          initialMode={upload.mode}
           initialBoard={upload.board}
+          initialDraft={upload.draft}
           onClose={closeUpload}
         />
       )}

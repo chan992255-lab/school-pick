@@ -1,6 +1,6 @@
 # 스쿨픽 (School Pick)
 
-> 고등학생을 위한 **짧은 영상·사진 공유(쇼츠)** 와 **일상 · 급식 · 공부 질문 커뮤니티**를 하나로 합친 모바일 퍼스트 웹앱입니다.
+> 고등학생을 위한 **우리 학교 오늘 급식표** 와 **일상 · 급식 후기 · 공부 질문 커뮤니티**를 하나로 합친 모바일 퍼스트 웹앱입니다.
 
 React + TypeScript + Vite + Tailwind CSS 로 만들었고, 백엔드는 **Supabase**(인증 · Postgres · Storage)를 사용합니다.
 Supabase 키를 아직 넣지 않아도 앱은 **데모 모드**로 바로 실행되며, 모든 화면과 상호작용을 그대로 확인할 수 있습니다.
@@ -9,14 +9,17 @@ Supabase 키를 아직 넣지 않아도 앱은 **데모 모드**로 바로 실�
 
 ## 1. 주요 기능
 
-### 쇼츠 · 미디어 피드
-- 세로 스크롤 스냅(모바일) / 카드 그리드(데스크톱) 피드
-- 사진과 짧은 영상 업로드 (Supabase Storage `media` 버킷)
-- 좋아요 · 댓글 · 저장(북마크), 태그 필터(`#급식 #공부 #일상 #입시 #동아리 #운동 #음악 #게임 #진로`)
-- 작성자 학교 · 학년 표시
+### 오늘의 급식표 (나이스 NEIS 연동)
+- 나이스 교육정보 개방 포털 Open API 로 학교 검색 · 급식 식단 조회 (인증키 없이 브라우저에서 직접 호출)
+- 우리 학교를 한 번 선택하면 `localStorage` 에 저장돼 다음 방문부터 오늘 급식이 바로 표시 (언제든 학교 변경)
+- 날짜 이동(이전 날 · 오늘 · 다음 날) + 7일 주간 스트립, 급식이 있는 날은 점으로 표시
+- 조식 · 중식 · 석식 구분, 칼로리, 메뉴별 알레르기 번호 배지(토글) 와 번호별 유발 식품 안내
+- 원산지 · 영양 정보 접기/펼치기, 최근 4주 범위에서 이전/다음 급식일 · 가장 가까운 급식일로 이동
+- 주말 · 휴일 · 방학처럼 급식이 없으면 "오늘 급식 정보가 없어요" 안내와 이동 버튼
+- **오늘 급식 글쓰기**: 오늘 메뉴를 급식 게시판 글쓰기 폼에 자동으로 채워 공유
 
 ### 고등학생 커뮤니티
-- 게시판 탭: **전체 / 일상·자유 / 급식 / 공부·질문(Q&A)**
+- 게시판 탭: **전체 / 일상·자유 / 급식 / 공부·질문(Q&A)** (급식 게시판 상단에는 오늘 급식 요약 카드)
 - 글쓰기(제목 · 본문 · 사진 첨부 · 태그), 검색(300ms 디바운스)
 - 글 상세 모달에서 좋아요 · 댓글 · 저장 · 공유(딥링크 `#/post/{id}`) · 본인 글 삭제
 
@@ -101,15 +104,16 @@ projects/school-pick/
    ├─ index.css               # Tailwind 레이어, 공통 컴포넌트 클래스
    ├─ components/
    │  ├─ AuthModal.tsx        # 로그인 / 회원가입
-   │  ├─ UploadModal.tsx      # 쇼츠 업로드 + 커뮤니티 글쓰기
+   │  ├─ UploadModal.tsx      # 커뮤니티 글쓰기 (사진 1장 첨부 · 급식 메뉴 미리 채우기)
    │  ├─ PostDetailModal.tsx  # 글 상세 + 댓글
-   │  ├─ MediaCard.tsx        # 쇼츠 카드
+   │  ├─ SchoolSearch.tsx     # 나이스 학교 검색 (지역·교육청 함께 표시)
+   │  ├─ MealBoardCard.tsx    # 급식 게시판 상단 오늘의 급식 카드
    │  ├─ PostCard.tsx         # 커뮤니티 글 카드
    │  ├─ MediaBlock.tsx       # 이미지/영상 렌더 + 오류 폴백
    │  ├─ Avatar.tsx / Logo.tsx / EmptyState.tsx / SetupBanner.tsx
    ├─ pages/
-   │  ├─ FeedPage.tsx         # 쇼츠 피드
-   │  ├─ CommunityPage.tsx    # 게시판 · 검색
+   │  ├─ CommunityPage.tsx    # 게시판 · 검색 (메인)
+   │  ├─ MealPage.tsx         # 급식표 · 날짜 이동 · 알레르기/영양 정보
    │  ├─ SavedPage.tsx        # 저장한 글
    │  └─ ProfilePage.tsx      # 프로필 · 테마 · 로그아웃
    ├─ context/
@@ -123,6 +127,8 @@ projects/school-pick/
       ├─ supabase-backend.ts  # 실제 Supabase 구현
       ├─ demo.ts              # localStorage 데모 구현 + 샘플 데이터
       ├─ backend.ts           # 환경에 따라 백엔드 선택
+      ├─ neis.ts              # 나이스 Open API(학교 검색·급식) + 날짜 유틸
+      ├─ useMeals.ts          # 기간별 급식 조회 훅
       └─ format.ts            # 시간/숫자/아바타 유틸
 ```
 
@@ -133,7 +139,7 @@ projects/school-pick/
 | 테이블 | 설명 | 주요 컬럼 |
 | --- | --- | --- |
 | `profiles` | 학생 프로필 (auth.users 1:1) | `id`, `nickname`(유니크), `school`, `grade`(1~3), `bio`, `avatar_url` |
-| `posts` | 쇼츠 + 커뮤니티 글 | `kind`(media/post), `board`(daily/meal/qna), `title`, `body`, `media_url`, `media_type`, `tags[]` |
+| `posts` | 커뮤니티 글 (사진 첨부 포함) | `kind`(media/post), `board`(daily/meal/qna), `title`, `body`, `media_url`, `media_type`, `tags[]` |
 | `comments` | 댓글 | `post_id`, `author_id`, `body` |
 | `likes` | 좋아요 | PK(`post_id`, `user_id`) |
 | `bookmarks` | 저장 | PK(`post_id`, `user_id`) |
@@ -197,5 +203,5 @@ cd ../deploy-ghp && git add -A && git commit -m "deploy: 스쿨픽 빌드" && gi
 ## 7. 다음에 붙이면 좋을 것
 
 - 학교 인증(학교 이메일 도메인 제한)과 학교별 피드 분리
-- 급식 API(NEIS) 연동으로 오늘의 급식 자동 표시
+- 급식표에서 급식 후기·별점 남기기, 어제/내일 메뉴 알림
 - 알림(댓글·좋아요), 이미지 리사이즈/썸네일, 신고·차단, 무한 스크롤

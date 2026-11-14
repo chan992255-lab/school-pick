@@ -9,7 +9,12 @@ import {
 import { useAuth } from './AuthContext';
 import type { Board } from '../lib/types';
 
-export type UploadMode = 'media' | 'post';
+/** 글쓰기 폼에 미리 채워 넣을 내용 (예: 오늘 급식 메뉴) */
+export interface UploadDraft {
+  title?: string;
+  body?: string;
+  tags?: string[];
+}
 
 interface UIContextValue {
   /** 로그인 모달 */
@@ -17,9 +22,9 @@ interface UIContextValue {
   authMessage?: string;
   openAuth: (message?: string) => void;
   closeAuth: () => void;
-  /** 업로드 모달 */
-  upload: { mode: UploadMode; board: Board } | null;
-  openUpload: (mode?: UploadMode, board?: Board) => void;
+  /** 글쓰기 모달 */
+  upload: { board: Board; draft?: UploadDraft } | null;
+  openUpload: (board?: Board, draft?: UploadDraft) => void;
   closeUpload: () => void;
   /** 게시물 상세 모달 */
   postId: string | null;
@@ -41,7 +46,7 @@ export function UIProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const [authOpen, setAuthOpen] = useState(false);
   const [authMessage, setAuthMessage] = useState<string | undefined>(undefined);
-  const [upload, setUpload] = useState<{ mode: UploadMode; board: Board } | null>(null);
+  const [upload, setUpload] = useState<{ board: Board; draft?: UploadDraft } | null>(null);
   const [postId, setPostId] = useState<string | null>(null);
   const [dataVersion, setDataVersion] = useState(0);
   const [pending, setPending] = useState<(() => void) | null>(null);
@@ -70,12 +75,12 @@ export function UIProvider({ children }: { children: ReactNode }) {
   );
 
   const openUpload = useCallback(
-    (mode: UploadMode = 'media', board: Board = 'daily') => {
+    (board: Board = 'daily', draft?: UploadDraft) => {
       if (!user) {
-        requireAuth('로그인하면 사진·영상과 글을 올릴 수 있어요.', () => setUpload({ mode, board }));
+        requireAuth('로그인하면 글과 사진을 올릴 수 있어요.', () => setUpload({ board, draft }));
         return;
       }
-      setUpload({ mode, board });
+      setUpload({ board, draft });
     },
     [user, requireAuth],
   );

@@ -272,7 +272,7 @@ function persist(snapshot: DemoState): void {
     // 저장 공간 초과 등: 상태를 되돌리고 사용자에게 알린다.
     state = snapshot;
     throw new Error(
-      '데모 모드의 브라우저 저장 공간이 가득 찼어요. Supabase를 연결하면 큰 사진·영상도 저장할 수 있습니다.',
+      '데모 모드의 브라우저 저장 공간이 가득 찼어요. Supabase를 연결하면 큰 사진도 저장할 수 있습니다.',
     );
   }
 }

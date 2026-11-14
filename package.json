@@ -3,7 +3,7 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
-  "description": "고등학생을 위한 쇼츠·커뮤니티 웹앱 (School Pick)",
+  "description": "고등학생을 위한 급식표·커뮤니티 웹앱 (School Pick)",
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",

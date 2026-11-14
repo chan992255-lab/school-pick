@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { AlertCircle, MessageSquare, PenLine, RefreshCw, Search, X } from 'lucide-react';
 import { PostCard } from '../components/PostCard';
 import { EmptyState } from '../components/EmptyState';
+import { MealBoardCard } from '../components/MealBoardCard';
 import { useAuth } from '../context/AuthContext';
 import { useUI } from '../context/UIContext';
 import { backend } from '../lib/backend';
@@ -10,9 +11,11 @@ import { BOARDS, type Board, type Post } from '../lib/types';
 export function CommunityPage({
   board,
   onBoardChange,
+  onOpenMeal,
 }: {
   board: Board | 'all';
   onBoardChange: (board: Board | 'all') => void;
+  onOpenMeal: () => void;
 }) {
   const { user } = useAuth();
   const { dataVersion, openUpload } = useUI();
@@ -60,13 +63,15 @@ export function CommunityPage({
         </div>
         <button
           type="button"
-          onClick={() => openUpload('post', board === 'all' ? 'daily' : board)}
+          onClick={() => openUpload(board === 'all' ? 'daily' : board)}
           className="btn-primary shrink-0"
         >
           <PenLine className="h-4 w-4" />
           글쓰기
         </button>
       </div>
+
+      {board === 'meal' && <MealBoardCard onOpen={onOpenMeal} />}
 
       <div className="relative mb-3">
         <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
@@ -138,7 +143,7 @@ export function CommunityPage({
           action={
             <button
               type="button"
-              onClick={() => openUpload('post', board === 'all' ? 'daily' : board)}
+              onClick={() => openUpload(board === 'all' ? 'daily' : board)}
               className="btn-primary"
             >
               <PenLine className="h-4 w-4" />
