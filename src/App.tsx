@@ -145,6 +145,16 @@ function Shell() {
     mainRef.current?.scrollTo({ top: 0, behavior: 'auto' });
   }, [route]);
 
+  // 이메일 인증 링크로 돌아온 경우(#access_token=...) 해시를 정리해 라우팅과 섞이지 않게 한다.
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (!hash.includes('access_token=') && !hash.includes('error_description=')) return;
+    const timer = window.setTimeout(() => {
+      window.location.hash = '#/shorts';
+    }, 700);
+    return () => window.clearTimeout(timer);
+  }, []);
+
   const closePostAndHash = useCallback(() => {
     closePost();
     if (window.location.hash.startsWith('#/post/')) {

@@ -268,6 +268,7 @@ export function PostDetailModal({ postId, onClose }: { postId: string; onClose: 
                   type="button"
                   onClick={toggleLike}
                   aria-pressed={post.liked}
+                  aria-label="좋아요"
                   className={`flex items-center gap-1.5 rounded-full border px-3.5 py-2 text-[12.5px] font-bold transition ${
                     post.liked
                       ? 'border-rose-200 bg-rose-50 text-rose-600 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300'

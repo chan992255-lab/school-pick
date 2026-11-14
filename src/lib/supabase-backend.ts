@@ -92,10 +92,15 @@ export const supabaseBackend: Backend = {
 
   async signUp(input: SignUpInput): Promise<AuthResult> {
     const sb = client();
+    const redirectTo =
+      typeof window !== 'undefined'
+        ? `${window.location.origin}${window.location.pathname}`
+        : undefined;
     const { data, error } = await sb.auth.signUp({
       email: input.email.trim(),
       password: input.password,
       options: {
+        emailRedirectTo: redirectTo,
         data: {
           nickname: input.nickname,
           school: input.school,
