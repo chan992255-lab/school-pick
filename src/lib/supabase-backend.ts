@@ -41,7 +41,7 @@ function toPost(row: Row): Post {
   };
 }
 
-const POST_SELECT = '*, author:profiles(*), comments(count), likes(count)';
+const POST_SELECT = '*, author:profiles!posts_author_id_fkey(*), comments(count), likes(count)';
 
 function friendlyAuthError(message: string): string {
   if (/invalid login credentials/i.test(message)) return '이메일 또는 비밀번호가 올바르지 않아요.';
