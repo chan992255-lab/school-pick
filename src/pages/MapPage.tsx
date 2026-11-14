@@ -402,7 +402,7 @@ export function MapPage({ onOpenMeal }: { onOpenMeal: () => void }) {
     if (!neis) return;
     saveSchool(neis);
     setSaved(neis);
-    toast(`${neis.name}을(를) 내 학교로 저장했어요.`, 'success');
+    toast(`내 학교로 저장했어요 · ${neis.name}`, 'success');
   }, [neis, toast]);
 
   const isSavedSchool = Boolean(neis && saved && saved.code === neis.code && saved.atptCode === neis.atptCode);
