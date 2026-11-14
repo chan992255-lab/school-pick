@@ -224,12 +224,23 @@ export async function searchSchools(query: string): Promise<School[]> {
   const keyword = query.trim();
   if (!keyword) return [];
 
-  const rows = await neisGet('schoolInfo', { SCHUL_NM: keyword }, 100);
-  const schools = rows
-    .map(rowToSchool)
-    .filter((school) => school.name && school.code && school.atptCode);
+  // 나이스 응답은 한 번에 5건까지만 돌아오기 때문에, 고등학교 필터를 함께 걸어
+  // 이름이 같은 중·고등학교가 섞여도 고등학교가 잘리지 않게 한다.
+  const [highSchools, allSchools] = await Promise.all([
+    neisGet('schoolInfo', { SCHUL_NM: keyword, SCHUL_KND_SC_NM: '고등학교' }, 100).catch(
+      () => [] as NeisRow[],
+    ),
+    neisGet('schoolInfo', { SCHUL_NM: keyword }, 100),
+  ]);
 
-  return schools
+  const merged = new Map<string, School>();
+  for (const row of [...highSchools, ...allSchools]) {
+    const school = rowToSchool(row);
+    if (!school.name || !school.code || !school.atptCode) continue;
+    merged.set(`${school.atptCode}-${school.code}`, school);
+  }
+
+  return [...merged.values()]
     .sort(
       (a, b) =>
         kindRank(a.kind) - kindRank(b.kind) ||
@@ -301,27 +312,42 @@ function rowToMeal(row: NeisRow): Meal | null {
   };
 }
 
-/** 기간(from~to, YYYYMMDD) 안의 급식 식단을 모두 가져온다. */
-export async function fetchMeals(school: School, from: string, to: string): Promise<Meal[]> {
+/** 하루치 급식. 나이스는 한 번에 5행만 돌려주기 때문에 날짜 단위로 조회한다. */
+async function fetchMealsByDate(school: School, date: string): Promise<Meal[]> {
   const rows = await neisGet(
     'mealServiceDietInfo',
     {
       ATPT_OFCDC_SC_CODE: school.atptCode,
       SD_SCHUL_CODE: school.code,
-      MLSV_FROM_YMD: from,
-      MLSV_TO_YMD: to,
+      MLSV_YMD: date,
     },
-    400,
+    20,
   );
 
-  return rows
-    .map(rowToMeal)
-    .filter((meal): meal is Meal => Boolean(meal))
-    .sort(
-      (a, b) =>
-        a.date.localeCompare(b.date) ||
-        MEAL_TYPE_ORDER.indexOf(a.typeCode) - MEAL_TYPE_ORDER.indexOf(b.typeCode),
-    );
+  return rows.map(rowToMeal).filter((meal): meal is Meal => Boolean(meal));
+}
+
+/**
+ * 여러 날짜의 급식을 병렬로(동시 6건) 가져온다.
+ * 나이스 mealServiceDietInfo 는 pSize·pIndex 와 무관하게 한 번에 5행까지만 응답해서,
+ * 기간 조회로는 뒤쪽 날짜가 잘린다. 그래서 날짜별 조회 후 합친다.
+ */
+export async function fetchMeals(school: School, dates: string[]): Promise<Meal[]> {
+  const unique = [...new Set(dates)].sort();
+  const CONCURRENCY = 6;
+  const collected: Meal[] = [];
+
+  for (let index = 0; index < unique.length; index += CONCURRENCY) {
+    const batch = unique.slice(index, index + CONCURRENCY);
+    const results = await Promise.all(batch.map((date) => fetchMealsByDate(school, date)));
+    for (const meals of results) collected.push(...meals);
+  }
+
+  return collected.sort(
+    (a, b) =>
+      a.date.localeCompare(b.date) ||
+      MEAL_TYPE_ORDER.indexOf(a.typeCode) - MEAL_TYPE_ORDER.indexOf(b.typeCode),
+  );
 }
 
 /* ------------------------------------------------------------------ */

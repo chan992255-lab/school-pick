@@ -91,6 +91,12 @@ export function SchoolSearch({
         </p>
       )}
 
+      {results.length >= 5 && (
+        <p className="mt-2 text-[11px] text-zinc-400 dark:text-zinc-500">
+          결과가 많은 편이에요. 학교 이름을 끝까지 적으면 원하는 학교를 더 빨리 찾을 수 있어요.
+        </p>
+      )}
+
       {results.length > 0 && (
         <ul className="mt-3 max-h-72 divide-y divide-zinc-100 overflow-y-auto rounded-2xl border border-zinc-200 dark:divide-white/10 dark:border-white/10">
           {results.map((school) => (

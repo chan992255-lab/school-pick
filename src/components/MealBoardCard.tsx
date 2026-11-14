@@ -4,6 +4,7 @@ import {
   MEAL_TYPE_EMOJI,
   addDays,
   dateLabel,
+  dayDiff,
   loadSavedSchool,
   todayYmd,
 } from '../lib/neis';
@@ -15,8 +16,13 @@ import { useMeals } from '../lib/useMeals';
  */
 export function MealBoardCard({ onOpen }: { onOpen: () => void }) {
   const school = useMemo(() => loadSavedSchool(), []);
-  const today = todayYmd();
-  const { meals, loading } = useMeals(school, addDays(today, -3), addDays(today, 7));
+  const today = useMemo(() => todayYmd(), []);
+  const dates = useMemo(() => {
+    const from = addDays(today, -3);
+    const total = dayDiff(from, addDays(today, 7));
+    return Array.from({ length: total + 1 }, (_, index) => addDays(from, index));
+  }, [today]);
+  const { meals, loading } = useMeals(school, dates);
 
   const todayMeals = meals.filter((meal) => meal.date === today);
   const mainMeal = todayMeals.find((meal) => meal.typeCode === '2') ?? todayMeals[0] ?? null;

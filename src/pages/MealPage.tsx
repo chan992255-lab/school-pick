@@ -43,13 +43,19 @@ export function MealPage() {
 
   const today = useMemo(() => todayYmd(), []);
 
-  // 선택한 날짜를 가운데 두고 앞뒤 4주치를 한 번에 받아 둔다(주간 이동·가장 가까운 급식일 찾기용).
-  const range = useMemo(() => ({ from: addDays(anchor, -8), to: addDays(anchor, 21) }), [anchor]);
-  const { meals, loading, error, refresh } = useMeals(school, range.from, range.to);
+  // 선택한 날짜 앞뒤 1주씩을 받아 둔다(주간 이동, 이전/다음·가장 가까운 급식일 찾기용).
+  const span = useMemo(() => ({ from: addDays(anchor, -7), to: addDays(anchor, 7) }), [anchor]);
+  const dates = useMemo(() => {
+    const list: string[] = [];
+    const total = dayDiff(span.from, span.to);
+    for (let index = 0; index <= total; index += 1) list.push(addDays(span.from, index));
+    return list;
+  }, [span.from, span.to]);
+  const { meals, loading, error, refresh } = useMeals(school, dates);
 
   useEffect(() => {
-    if (selected < range.from || selected > range.to) setAnchor(selected);
-  }, [selected, range.from, range.to]);
+    if (selected < span.from || selected > span.to) setAnchor(selected);
+  }, [selected, span.from, span.to]);
 
   const byDate = useMemo(() => {
     const map = new Map<string, Meal[]>();
