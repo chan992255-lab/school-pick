@@ -71,6 +71,8 @@ export function MapPage({ onOpenMeal }: { onOpenMeal: () => void }) {
   const markerLayerRef = useRef<L.LayerGroup | null>(null);
   const highlightRef = useRef<L.Marker | null>(null);
   const neisCacheRef = useRef<Map<string, School | null>>(new Map());
+  /** 첫 화면 맞춤(fitBounds)을 한 번만 실행하기 위한 표시 */
+  const didFitRef = useRef(false);
 
   const [region, setRegion] = useState<RegionName>('전체');
   const [query, setQuery] = useState('');
@@ -107,15 +109,32 @@ export function MapPage({ onOpenMeal }: { onOpenMeal: () => void }) {
     map.attributionControl.setPrefix(false);
     // 데스크톱에서만 확대/축소 버튼을 둔다(모바일은 핀치 줌).
     if (window.matchMedia('(min-width: 1024px)').matches) {
-      L.control.zoom({ position: 'bottomleft' }).addTo(map);
+      L.control.zoom({ position: 'bottomright' }).addTo(map);
     }
     markerLayerRef.current = L.layerGroup().addTo(map);
     mapRef.current = map;
 
-    const resize = window.setTimeout(() => map.invalidateSize(), 220);
+    // 컨테이너 크기가 잡힌 뒤에 한 번 전국 학교가 모두 보이도록 맞춘다.
+    const fitAll = () => {
+      if (didFitRef.current || map.getSize().y < 120) return;
+      didFitRef.current = true;
+      map.fitBounds(L.latLngBounds(SCHOOLS.map((school) => [school.lat, school.lon] as [number, number])), {
+        padding: [24, 24],
+      });
+    };
+    const observer = new ResizeObserver(() => {
+      map.invalidateSize();
+      fitAll();
+    });
+    observer.observe(container);
+    const resize = window.setTimeout(() => {
+      map.invalidateSize();
+      fitAll();
+    }, 200);
 
     return () => {
       window.clearTimeout(resize);
+      observer.disconnect();
       map.remove();
       mapRef.current = null;
       markerLayerRef.current = null;
@@ -165,13 +184,13 @@ export function MapPage({ onOpenMeal }: { onOpenMeal: () => void }) {
 
   useEffect(() => {
     const map = mapRef.current;
-    if (!map) return;
+    if (!map || !didFitRef.current) return;
     const list = region === '전체' ? SCHOOLS : SCHOOLS.filter((school) => school.region === region);
     if (!list.length) return;
     const bounds = L.latLngBounds(list.map((school) => [school.lat, school.lon] as [number, number]));
     map.flyToBounds(bounds, {
       padding: [28, 28],
-      maxZoom: region === '전체' ? DEFAULT_ZOOM : 11,
+      maxZoom: region === '전체' ? 10 : 11,
       duration: 0.7,
     });
   }, [region]);
