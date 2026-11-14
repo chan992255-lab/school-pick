@@ -98,6 +98,8 @@ export function MapPage({ onOpenMeal }: { onOpenMeal: () => void }) {
       minZoom: 6,
       maxZoom: 18,
       zoomControl: false,
+      // 학교 핀이 촘촘해서 손가락으로도 누를 수 있도록 캔버스 렌더러의 클릭 여유를 넓힌다.
+      renderer: L.canvas({ padding: 0.4, tolerance: 8 }),
       preferCanvas: true,
       maxBounds: [
         [31.5, 122.0],
@@ -167,12 +169,12 @@ export function MapPage({ onOpenMeal }: { onOpenMeal: () => void }) {
 
     for (const school of list) {
       const marker = L.circleMarker([school.lat, school.lon], {
-        radius: 4,
-        weight: 1,
+        radius: 4.5,
+        weight: 1.2,
         color: '#ffffff',
         opacity: 0.9,
         fillColor: color,
-        fillOpacity: 0.85,
+        fillOpacity: 0.9,
       });
       marker.on('click', () => {
         setSearchOpen(false);
